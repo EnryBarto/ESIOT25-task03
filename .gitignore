@@ -1,0 +1,14 @@
+# Log files
+*.log
+
+# code folder
+.vscode/
+*/.vscode/
+
+# Ignore Java compiled files
+*.class
+*.DS_Store
+.drone-remote-unit/deleteme/
+
+# Ignore latex files
+*.synctex.gz
