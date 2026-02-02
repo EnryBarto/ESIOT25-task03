@@ -2,7 +2,7 @@
 
 LoggerTask::LoggerTask(DistanceSensor *sensor) {
     this->sensor = sensor;
-    this->currState = DETECTION;
+    this->currState = NOT_DETECTING;
 }
 
 void LoggerTask::init(SharedData *sharedData) {
@@ -11,8 +11,24 @@ void LoggerTask::init(SharedData *sharedData) {
 
 void LoggerTask::tick() {
     switch (this->currState) {
+        case NOT_DETECTING:
+            if (!this->sharedData->isWifiError() && !this->sharedData->isMqttError()) {
+                this->currState = DETECTION;
+            }
+            break;
+
         case DETECTION:
-            uint16_t distance = this->sensor->getDistance();
+            if (this->sharedData->isWifiError() || this->sharedData->isMqttError()) {
+                this->currState = NOT_DETECTING;
+            } else {
+                this->distance = this->sensor->getDistance();
+                snprintf(this->msgBuffer, MQTT_MSG_BUFFER_SIZE, "%ld", this->distance);
+                bool publishStatus = this->sharedData->getMqttClient()->publish(MQTT_TOPIC, this->msgBuffer);
+                this->sharedData->setMqttError(!publishStatus);
+                #ifdef DEBUG
+                Serial.printf("LOGGER TASK: Message published status %s\n", publishStatus ? "OK" : "Error");
+                #endif
+            }
             break;
     }
 }

@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <PubSubClient.h>
 #include "Task.h"
 #include "config.h"
 #include "wifi_config.h"
@@ -19,10 +20,11 @@ class ConnectionTask : public Task {
 
     private:
         SharedData *sharedData;
-        enum states {WIFI_CONNECTED, WIFI_CONNECTING, WIFI_DISCONNECTED, NONE};
+        enum states {CONNECTED, WIFI_CONNECTING, WIFI_DISCONNECTED, MQTT_CONNECTING, NONE};
         states currState;
         states precState;
-        uint32_t lastConnectionAttempt;
+        uint32_t lastWifiConnectionAttempt, lastMqttConnectionAttempt;
+        WiFiClient wifiClient;
 };
 
 #endif

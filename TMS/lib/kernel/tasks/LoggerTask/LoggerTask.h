@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "Task.h"
+#include "config.h"
 #include "SharedData/SharedData.h"
 #include "DistanceSensor.h"
 
@@ -17,9 +18,11 @@ class LoggerTask : public Task {
 
     private:
         SharedData *sharedData;
-        enum states {DETECTION};
+        enum states {DETECTION, NOT_DETECTING};
         states currState;
         DistanceSensor *sensor;
+        uint16_t distance;
+        char msgBuffer[MQTT_MSG_BUFFER_SIZE];
 };
 
 #endif

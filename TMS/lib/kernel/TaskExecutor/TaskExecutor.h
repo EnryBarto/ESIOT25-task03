@@ -14,7 +14,6 @@ class TaskExecutor {
         SharedData *sharedData;
         Task *toExecute;
         uint32_t delay;
-
 };
 
 #endif

@@ -4,7 +4,9 @@
 HardwarePlatform::HardwarePlatform() { }
 
 void HardwarePlatform::init() {
+	#ifdef DEBUG
 	Serial.begin(SERIAL_SPEED);
+	#endif
   	alarmLed = new LedImpl(ALARM_LED_PIN);
   	workingLed = new LedImpl(WORKING_LED_PIN);
 	distanceSensor = new Sonar(SONAR_ECHO_PIN, SONAR_TRIG_PIN);

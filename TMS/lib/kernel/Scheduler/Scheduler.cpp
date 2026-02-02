@@ -6,7 +6,9 @@ Scheduler::Scheduler() {
 
 void Scheduler::startTask(Task *task, uint16_t delay) {
     if (this->numTask >= MAX_TASKS) {
+        #ifdef DEBUG
         Serial.println("Max tasks reached!");
+        #endif
         return;
     }
 
