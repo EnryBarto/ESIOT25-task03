@@ -1,0 +1,11 @@
+{
+  "name": "devices",
+  "build": {
+    "flags": "-I .",
+    "srcFilter": [
+      "+<*>",
+      "+<**/*.c>",
+      "+<**/*.cpp>"
+    ]
+  }
+}

@@ -1,26 +1,48 @@
 #include <Arduino.h>
-#include <HCSR04.h>
+#include "HardwarePlatform.h"
 
-UltraSonicDistanceSensor distanceSensor(33, 32);
+TaskHandle_t task1;
+TaskHandle_t task2;
+
+HardwarePlatform hwPlat;
+
+void Task1code(void *parameter) {
+    Serial.print("Task1 running on core ");
+    Serial.println(xPortGetCoreID());
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+    const TickType_t xFrequency = 2000;
+
+    for (;;) {
+        Serial.println(hwPlat.getSonar()->getDistance());
+        xLastWakeTime = xTaskGetTickCount();
+        vTaskDelayUntil(&xLastWakeTime, xFrequency);
+    }
+}
+
+void Task2code(void *parameter) {
+    Serial.print("Task2 running on core ");
+    Serial.println(xPortGetCoreID());
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+    const TickType_t xFrequency = 1000;
+
+    for (;;) {
+        hwPlat.getWorkingLed()->setOn();
+        hwPlat.getAlarmLed()->setOff();
+        xLastWakeTime = xTaskGetTickCount();
+        vTaskDelayUntil(&xLastWakeTime, xFrequency);
+        hwPlat.getWorkingLed()->setOff();
+        hwPlat.getAlarmLed()->setOn();
+        xLastWakeTime = xTaskGetTickCount();
+        vTaskDelayUntil(&xLastWakeTime, xFrequency);
+    }
+}
+
 
 void setup() {
-    Serial.begin(9600);
-    pinMode(25, OUTPUT);
-    pinMode(26, OUTPUT);
+    hwPlat.init();
+    xTaskCreatePinnedToCore(Task1code, "Task1", 10000, NULL, 1, &task1, 0);
+    xTaskCreatePinnedToCore(Task2code, "Task2", 10000, NULL, 1, &task2, 0);
 }
 
 void loop() {
-    int distance = distanceSensor.measureDistanceCm();
-
-    Serial.print(F("Distance: "));
-    Serial.print(distance);
-    Serial.println(F("cm"));
-
-    digitalWrite(25, HIGH);
-    digitalWrite(26, HIGH);
-    delay(500);
-    digitalWrite(25, LOW);
-    digitalWrite(26, LOW);
-    delay(500);
-
 }
