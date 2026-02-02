@@ -1,0 +1,28 @@
+#ifndef __CONNECTION_TASK__
+#define __CONNECTION_TASK__
+
+#include <Arduino.h>
+#include <WiFi.h>
+#include "Task.h"
+#include "config.h"
+#include "wifi_config.h"
+#include "SharedData/SharedData.h"
+
+class ConnectionTask : public Task {
+
+    public:
+        ConnectionTask();
+        void init(SharedData *sharedData) override;
+        void tick() override;
+        void stateTransition() override;
+        const char* getName() override;
+
+    private:
+        SharedData *sharedData;
+        enum states {WIFI_CONNECTED, WIFI_CONNECTING, WIFI_DISCONNECTED, NONE};
+        states currState;
+        states precState;
+        uint32_t lastConnectionAttempt;
+};
+
+#endif
