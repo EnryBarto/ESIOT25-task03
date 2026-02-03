@@ -1,0 +1,28 @@
+#ifndef __MAIN_TASK__
+#define __MAIN_TASK__
+
+#include "Task.h"
+#include "SharedData/SharedData.h"
+#include "Lcd.h"
+#include "Button.h"
+#include "Slider.h"
+#include "ServoMotor.h"
+#include "protocol_commands.h"
+
+class MainTask : public Task {
+
+    public:
+        MainTask(SharedData* shared, Lcd* lcd, Button* modeButton, Slider* potentiometer, ServoMotor* motor);
+        void tick() override;
+
+    private:
+        enum states {IDLE};
+        states currentState;
+        states precState;
+        Lcd* lcd;
+        Button* modeButton;
+        Slider* potentiometer;
+        ServoMotor* motor;
+};
+
+#endif
