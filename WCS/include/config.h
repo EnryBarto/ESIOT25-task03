@@ -8,14 +8,20 @@
 
 // Communication configs
 #define LCD_I2C_ADDRESS 0x27
-#define LCD_COLS 20
-#define LCD_ROWS 4
 #define SERIAL_SPEED 9600
 
-#define POTENTIOMETER_TOLLERANCE 5
+// Hardware configs
+#define POTENTIOMETER_TOLLERANCE 15
 #define BUTTON_NUM_TICK_DEBOUNCE 4
+#define MAX_SERVO_OPENING 90
+
+// Lcd parameters
 #define MODE_LCD_ROW 0
 #define VALUE_LCD_ROW 2
+#define LCD_COLS 20
+#define LCD_ROWS 4
+
+// Task configs
 #define BASE_PERIOD 50
 #define MAIN_TASK_PERIOD 250
 

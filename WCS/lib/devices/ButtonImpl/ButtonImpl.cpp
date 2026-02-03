@@ -11,6 +11,7 @@ ButtonImpl::ButtonImpl(uint8_t pin, uint16_t debounceTick) {
 }
 
 bool ButtonImpl::isPressed() {
+	// If they haven't passed the debounce tick since last pressure, return false
 	if (this->lastPressure != 0 && this->tick - this->lastPressure < this->debounceNumTick) {
 		return false;
 	}
@@ -23,9 +24,12 @@ bool ButtonImpl::isPressed() {
 	return false;
 }
 
+// Tick counter
 void ButtonImpl::update() {
 	if (this->tick == UINT64_MAX) {
-		lastPressure = 0;
+		// Handle the overflow
+		this->lastPressure = 1;
+		this->tick = this->tick - this->lastPressure + 1;
 	}
 	this->tick++;
 }

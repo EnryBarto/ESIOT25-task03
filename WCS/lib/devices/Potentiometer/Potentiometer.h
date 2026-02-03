@@ -10,7 +10,7 @@ class Potentiometer: public Slider {
         Potentiometer(uint8_t pin);
         Potentiometer(uint8_t pin, uint16_t tollerance);
         bool isChanged() override;
-        uint16_t getValue() override;
+        uint8_t getValue() override;
         void start() override;
 
     private:

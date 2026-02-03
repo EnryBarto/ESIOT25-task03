@@ -9,18 +9,18 @@ Potentiometer::Potentiometer(uint8_t pin, uint16_t tollerance) {
     this->lastValue = analogRead(this->pin);
 }
 
+// The value is changed only if it's outside the tollerance range
 bool Potentiometer::isChanged() {
-    Serial.println(analogRead(this->pin));
-    Serial.println(this->lastValue);
     int16_t tmp = analogRead(this->pin);
     return (tmp < (int16_t)((int16_t)this->lastValue - this->tollerance)) || (tmp > (int16_t)(this->lastValue + this->tollerance));
 }
 
-uint16_t Potentiometer::getValue() {
+uint8_t Potentiometer::getValue() {
     this->lastValue = analogRead(this->pin);
-    return this->lastValue;
+    return map(this->lastValue, 0, 1020, 0, 100);
 }
 
+// Force the next isChanged to be true
 void Potentiometer::start() {
-    this->lastValue = UINT16_MAX;
+    this->lastValue = INT16_MAX;
 }

@@ -1,0 +1,67 @@
+#include "SerialCommunication.h"
+
+void SerialCommunication::loop() {
+
+    if (Serial.available() > 0) {
+
+        String msg = Serial.readStringUntil('\n');
+        switch (msg.charAt(0)) {
+            case TOGGLE_MODE_CMD:
+                this->toggleMode = true;
+                break;
+
+            case UNCONNECTED_CMD:
+                this->unconnectedMode = true;
+                break;
+
+            case RESTORED_CON_CMD:
+                this->restoredConnection = true;
+                break;
+
+            case SET_VALUE_CMD:
+                this->_arrivedValue = true;
+                msg.remove(0, 2);
+                this->value = msg.toInt();
+                return;
+        }
+    }
+}
+
+bool SerialCommunication::isToggleMode() {
+    bool tmp = this->toggleMode;
+    if (tmp) this->resetValues();
+    return tmp;
+}
+
+bool SerialCommunication::isUnconnectedMode() {
+    bool tmp = this->unconnectedMode;
+    if (tmp) this->resetValues();
+    return tmp;
+}
+
+bool SerialCommunication::isConnectionRestored() {
+    bool tmp = this->restoredConnection;
+    if (tmp) this->resetValues();
+    return tmp;
+}
+
+bool SerialCommunication::isValueArrived() {
+    bool tmp = this->_arrivedValue;
+    return tmp;
+}
+
+uint8_t SerialCommunication::arrivedValue() {
+    if (this->_arrivedValue) this->resetValues();
+    return this->value;
+}
+
+void SerialCommunication::requestOpeningValue() {
+    Serial.println(REQ_OPENING_CMD);
+}
+
+void SerialCommunication::resetValues() {
+    this->toggleMode = false;
+    this->restoredConnection = false;
+    this->unconnectedMode = false;
+    this->_arrivedValue = false;
+}

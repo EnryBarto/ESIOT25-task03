@@ -8,6 +8,7 @@
 #include "Slider.h"
 #include "ServoMotor.h"
 #include "protocol_commands.h"
+#include "SerialCommunication.h"
 
 class MainTask : public Task {
 
@@ -25,6 +26,8 @@ class MainTask : public Task {
         Button* modeButton;
         Slider* potentiometer;
         ServoMotor* motor;
+        SerialCommunication serialCom;
+        void setOpening(uint8_t percentage);
 };
 
 #endif
