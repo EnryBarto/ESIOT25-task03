@@ -16,9 +16,11 @@ class MainTask : public Task {
         void tick() override;
 
     private:
-        enum states {IDLE};
+        enum states {AUTOMATIC, MANUAL, UNCONNECTED_AUTO, UNCONNECTED_MAN};
         states currentState;
         states precState;
+        enum manual_modes {PHYSICAL, VIRTUAL};
+        manual_modes currentManualMode;
         Lcd* lcd;
         Button* modeButton;
         Slider* potentiometer;

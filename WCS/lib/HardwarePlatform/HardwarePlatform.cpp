@@ -5,7 +5,7 @@ HardwarePlatform::HardwarePlatform() {
 }
 
 void HardwarePlatform::init() {
-  	modeButton = new ButtonImpl(MODE_BTN_PIN);
+  	modeButton = new ButtonImpl(MODE_BTN_PIN, BUTTON_NUM_TICK_DEBOUNCE);
   	motor = new ServoMotorImpl(MOTOR_PIN);
   	lcd = new LcdI2C(LCD_I2C_ADDRESS, LCD_COLS, LCD_ROWS);
 	slider = new Potentiometer(POTENTIOMETER_PIN, POTENTIOMETER_TOLLERANCE);

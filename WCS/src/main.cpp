@@ -6,9 +6,7 @@
 #include "HardwarePlatform.h"
 #include "SharedData/SharedData.h"
 #include <avr/io.h>
-
-#define BASE_PERIOD 50
-#define MAIN_TASK_PERIOD 500
+#include "config.h"
 
 Scheduler sched;
 HardwarePlatform hwPlat;

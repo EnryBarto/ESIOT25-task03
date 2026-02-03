@@ -7,10 +7,15 @@
 class ButtonImpl: public Button {
 	public:
 		ButtonImpl(uint8_t pin);
-		bool isPressed();
+		ButtonImpl(uint8_t pin, uint16_t debounceTime);
+		bool isPressed() override;
+		void update() override;
 
 	private:
 		uint8_t pin;
+		uint64_t lastPressure = 0;
+		uint64_t tick = 0;
+		uint16_t debounceNumTick;
 };
 
 #endif
