@@ -1,8 +1,5 @@
 package it.unibo.iot03.controller;
 
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
 import io.vertx.core.Vertx;
 import io.vertx.mqtt.MqttServer;
 import io.vertx.mqtt.MqttServerOptions;
@@ -11,6 +8,7 @@ import it.unibo.iot03.com.HttpServer;
 import it.unibo.iot03.com.MyMqttHandler;
 import it.unibo.iot03.com.SerialCommChannel;
 import it.unibo.iot03.model.Logic;
+import it.unibo.iot03.model.Logic.State;
 import it.unibo.iot03.model.LogicImpl;
 
 public class ControllerImpl implements Controller {
@@ -18,7 +16,6 @@ public class ControllerImpl implements Controller {
     private CommChannel serialCom;
     private final Vertx vertx;
     private final Logic logic;
-    private final Queue<String> messaggi = new ConcurrentLinkedQueue<>();
 
     public ControllerImpl() {
         this.vertx = Vertx.vertx();
@@ -38,7 +35,7 @@ public class ControllerImpl implements Controller {
         MqttServerOptions options = new MqttServerOptions().setPort(port);
         MqttServer mqttServer = MqttServer.create(vertx, options);
         mqttServer
-            .endpointHandler(new MyMqttHandler(messaggi))
+            .endpointHandler(new MyMqttHandler(this.logic))
             .listen()
             .onComplete(asyncResult -> {
                 if (asyncResult.succeeded()) {
@@ -53,12 +50,18 @@ public class ControllerImpl implements Controller {
 
     @Override
     public void startHttpServer(final int port) {
-		HttpServer httpServer = new HttpServer(port, messaggi);
+		HttpServer httpServer = new HttpServer(port, this.logic);
 		vertx.deployVerticle(httpServer);
     }
 
     @Override
     public void run() {
-        while (true) { }
+        while (true) {
+            switch (this.logic.getCurrentState()) {
+                default:
+                    break;
+            }
+        }
     }
+
 }

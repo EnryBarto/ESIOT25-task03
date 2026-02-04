@@ -1,8 +1,6 @@
 package it.unibo.iot03.com;
 
 import java.util.Date;
-import java.util.LinkedList;
-import java.util.Queue;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpServerResponse;
@@ -11,6 +9,8 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import it.unibo.iot03.model.Data;
+import it.unibo.iot03.model.Logic;
 
 /*
  * Data Service as a vertx event-loop
@@ -18,14 +18,11 @@ import io.vertx.ext.web.handler.BodyHandler;
 public class HttpServer extends AbstractVerticle {
 
 	private int port;
-	private static final int MAX_SIZE = 10;
-	private LinkedList<Integer> values;
-	private final Queue<String> messaggi;
+	private final Logic logic;
 
-	public HttpServer(int port, Queue<String> messaggi) {
-		values = new LinkedList<>();
+	public HttpServer(final int port, Logic logic) {
 		this.port = port;
-		this.messaggi = messaggi;
+		this.logic = logic;
 	}
 
 	@Override
@@ -53,11 +50,6 @@ public class HttpServer extends AbstractVerticle {
 			String place = res.getString("place");
 			long time = System.currentTimeMillis();
 
-			values.addFirst(1);
-			if (values.size() > MAX_SIZE) {
-				values.removeLast();
-			}
-
 			log("New value: " + value + " from " + place + " on " + new Date(time));
 			response.setStatusCode(200).end();
 		}
@@ -65,9 +57,10 @@ public class HttpServer extends AbstractVerticle {
 
 	private void handleGetData(RoutingContext routingContext) {
 		JsonArray arr = new JsonArray();
-		for (String p: messaggi) {
+		for (Data p: this.logic.getHistory()) {
 			JsonObject data = new JsonObject();
-			data.put("value", p);
+			data.put("timestamp", p.formattedTime());
+			data.put("value", p.value());
 			arr.add(data);
 		}
 		routingContext.response()

@@ -4,25 +4,27 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.netty.handler.codec.mqtt.MqttProperties;
 import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.Handler;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.mqtt.MqttEndpoint;
 import io.vertx.mqtt.MqttTopicSubscription;
 import io.vertx.mqtt.messages.codes.MqttSubAckReasonCode;
+import it.unibo.iot03.model.Logic;
 
 
 public class MyMqttHandler implements Handler<MqttEndpoint> {
 
+    private static final String TOPIC_NAME = "water-level";
     // Map to store the list of the endpoints subscribed to every topic
     private static final Map<String, List<MqttEndpoint>> subscriptions = new ConcurrentHashMap<>();
-    private final Queue<String> messaggi;
+    private final Logic logic;
 
-    public MyMqttHandler(Queue<String> messaggi) {
-        this.messaggi = messaggi;
+    public MyMqttHandler(final Logic logic) {
+        this.logic = logic;
     }
 
     @Override
@@ -76,7 +78,20 @@ public class MyMqttHandler implements Handler<MqttEndpoint> {
                 "Just received message [" + message.payload().toString(Charset.defaultCharset())
                 + "] with QoS [" + message.qosLevel() + "]"
             );
-            this.messaggi.add(message.payload().toString());
+
+            if (message.topicName().equals(TOPIC_NAME)) {
+                try {
+                    this.logic.addValue(Integer.parseInt(message.payload().toString()));
+                } catch(NumberFormatException e) {
+                    endpoint.publish(
+                        message.topicName(),
+                        Buffer.buffer("Invalid number received"),
+                        message.qosLevel(),
+                        message.isDup(),
+                        message.isRetain()
+                    );
+                }
+            }
             // Alerts all the endpoint subscribed to the topic, except the sender
             List<MqttEndpoint> subscribers = subscriptions.get(message.topicName());
             if (subscribers != null) {
