@@ -13,17 +13,17 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.mqtt.MqttEndpoint;
 import io.vertx.mqtt.MqttTopicSubscription;
 import io.vertx.mqtt.messages.codes.MqttSubAckReasonCode;
-import it.unibo.iot03.model.Logic;
+import it.unibo.iot03.model.api.Tms;
 
 
 public class MyMqttHandler implements Handler<MqttEndpoint> {
 
-    private static final String TOPIC_NAME = "water-level";
+    private static final String TOPIC_NAME = "water_level";
     // Map to store the list of the endpoints subscribed to every topic
     private static final Map<String, List<MqttEndpoint>> subscriptions = new ConcurrentHashMap<>();
-    private final Logic logic;
+    private final Tms logic;
 
-    public MyMqttHandler(final Logic logic) {
+    public MyMqttHandler(final Tms logic) {
         this.logic = logic;
     }
 

@@ -16,7 +16,7 @@
 #define LOGGER_TASK_DELAY 5000
 
 /* ------------------- MQTT ------------------- */
-#define MQTT_SERVER "192.168.1.29"
+#define MQTT_SERVER "192.168.1.16"
 #define MQTT_PORT 1883
 #define TIMEOUT_MQTT_RECONNECTION 5000
 #define MQTT_MSG_BUFFER_SIZE 50

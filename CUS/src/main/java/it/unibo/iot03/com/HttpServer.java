@@ -10,7 +10,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import it.unibo.iot03.model.Data;
-import it.unibo.iot03.model.Logic;
+import it.unibo.iot03.model.api.Tms;
 
 /*
  * Data Service as a vertx event-loop
@@ -18,9 +18,9 @@ import it.unibo.iot03.model.Logic;
 public class HttpServer extends AbstractVerticle {
 
 	private int port;
-	private final Logic logic;
+	private final Tms logic;
 
-	public HttpServer(final int port, Logic logic) {
+	public HttpServer(final int port, Tms logic) {
 		this.port = port;
 		this.logic = logic;
 	}
