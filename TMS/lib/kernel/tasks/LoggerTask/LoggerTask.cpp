@@ -26,6 +26,7 @@ void LoggerTask::tick() {
                 bool publishStatus = this->sharedData->getMqttClient()->publish(MQTT_TOPIC, this->msgBuffer);
                 this->sharedData->setMqttError(!publishStatus);
                 #ifdef DEBUG
+                Serial.printf("LOGGER TASK: Distance: %d\n", this->distance);
                 Serial.printf("LOGGER TASK: Message published status %s\n", publishStatus ? "OK" : "Error");
                 #endif
             }

@@ -2,7 +2,7 @@
 #define __CONFIG_H
 
 #define SERIAL_SPEED 115200
-// #define DEBUG YES
+//#define DEBUG YES
 
 /* -------------------- PIN -------------------- */
 #define SONAR_TRIG_PIN  33
@@ -13,7 +13,7 @@
 /* ------------------- TASKS ------------------- */
 #define CONNECTION_TASK_DELAY 500
 #define STATUS_TASK_DELAY 1000
-#define LOGGER_TASK_DELAY 2000
+#define LOGGER_TASK_DELAY 3000
 
 /* ------------------- MQTT ------------------- */
 #define MQTT_SERVER "192.168.1.16"

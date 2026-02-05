@@ -11,10 +11,11 @@ import it.unibo.iot03.model.api.Tms;
 
 public class TmsImpl implements Tms {
 
+    public final static int MAX_VALUES = 100;
     private LocalDateTime lastValueTime;
     private final Queue<Data> history = new ConcurrentLinkedQueue<>();
     private int lastValue;
-    private final static int TIMEOUT_TIME = 5000; // T2 period
+    private final static int TIMEOUT_TIME = 7000; // T2 period
     private boolean isThereNewVal;
 
     public TmsImpl() {
@@ -24,6 +25,7 @@ public class TmsImpl implements Tms {
 
     @Override
     public void addValue(final int value) {
+        if (this.history.size() >= MAX_VALUES) this.history.poll();
         this.history.add(new Data(value));
         this.lastValueTime = LocalDateTime.now();
         this.isThereNewVal = true;

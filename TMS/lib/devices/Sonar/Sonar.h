@@ -4,7 +4,7 @@
 #include "DistanceSensor.h"
 #include <Arduino.h>
 
-#define MAX_TIME_OUT 6000
+#define MAX_TIME_OUT 30000
 
 class Sonar : public DistanceSensor {
 	public:

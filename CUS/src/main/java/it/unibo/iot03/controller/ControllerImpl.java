@@ -199,6 +199,7 @@ public class ControllerImpl implements Controller {
                     break;
 
                 case MANUAL:
+                    this.tms.isNewValueReceived(); // Consume the received value
                     if (this.wcs.isToggleModeRequested()) {
                         this.currentState = State.AUTO;
                     }
@@ -233,9 +234,6 @@ public class ControllerImpl implements Controller {
                         break;
 
                     case UNCONNECTED_AUTO:
-                        this.wcs.sendUnconnected();
-                        break;
-
                     case UNCONNECTED_MANUAL:
                         this.wcs.sendUnconnected();
                         break;
