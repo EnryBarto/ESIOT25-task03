@@ -221,13 +221,16 @@ public class ControllerImpl implements Controller {
                     case AUTO:
                         if (this.tms.getLastValue() >= L2) {
                             this.currentAutoState = AutoState.OPEN;
+                            this.wcs.sendSetValve(VALVE_OPEN);
                         } else if (this.tms.getLastValue() < L1) {
                             this.currentAutoState = AutoState.CLOSED;
+                            this.wcs.sendSetValve(VALVE_CLOSED);
                         } else {
                             this.currentAutoState = AutoState.CLOSED_WAITING;
                             this.timer = LocalDateTime.now();
+                            this.wcs.sendSetValve(VALVE_CLOSED);
                         }
-                        this.precAutoState = AutoState.NONE;
+                        this.precAutoState = this.currentAutoState;
                         break;
 
                     case MANUAL:
