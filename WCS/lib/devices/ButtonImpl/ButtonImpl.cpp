@@ -27,9 +27,9 @@ bool ButtonImpl::isPressed() {
 // Tick counter
 void ButtonImpl::update() {
 	if (this->tick == UINT64_MAX) {
-		// Handle the overflow
-		this->lastPressure = 1;
+		// Handle the overflow: mantain the remaining ticks
 		this->tick = this->tick - this->lastPressure + 1;
+		this->lastPressure = 1;
 	}
 	this->tick++;
 }

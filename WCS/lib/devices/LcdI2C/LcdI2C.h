@@ -5,6 +5,7 @@
 #include "LiquidCrystal_I2C.h"
 
 class LcdI2C : public Lcd {
+
 	public:
 	  	LcdI2C(uint8_t address, uint8_t cols, uint8_t rows);
 		void print(const char* message, uint8_t row, uint8_t col) override;

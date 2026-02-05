@@ -25,7 +25,7 @@ void MainTask::tick() {
             } else if (this->serialCom.isUnconnectedMode()) {
                 this->currentState = UNCONNECTED_AUTO;
             } else if (this->serialCom.isValueArrived()) {
-                setOpening(this->serialCom.arrivedValue());
+                setOpening(this->serialCom.getArrivedValue());
             }
             break;
 
@@ -53,7 +53,7 @@ void MainTask::tick() {
 
                 case VIRTUAL:
                     if (this->serialCom.isValueArrived()) {
-                        uint8_t value = this->serialCom.arrivedValue();
+                        uint8_t value = this->serialCom.getArrivedValue();
                         setOpening(value);
                         this->serialCom.sendOpeningChanged(value);
                     }

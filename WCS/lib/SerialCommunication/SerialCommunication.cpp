@@ -4,7 +4,7 @@ void SerialCommunication::loop() {
 
     if (Serial.available() > 0) {
 
-        String msg = Serial.readStringUntil('\n');
+        String msg = Serial.readStringUntil(MESSAGE_DELIMITER);
         switch (msg.charAt(0)) {
             case TOGGLE_MODE_CMD:
                 this->toggleMode = true;
@@ -19,7 +19,7 @@ void SerialCommunication::loop() {
                 break;
 
             case SET_VALUE_CMD:
-                this->_arrivedValue = true;
+                this->arrivedValue = true;
                 msg.remove(0, 2);
                 this->value = msg.toInt();
                 return;
@@ -46,12 +46,12 @@ bool SerialCommunication::isConnectionRestored() {
 }
 
 bool SerialCommunication::isValueArrived() {
-    bool tmp = this->_arrivedValue;
+    bool tmp = this->arrivedValue;
     return tmp;
 }
 
-uint8_t SerialCommunication::arrivedValue() {
-    if (this->_arrivedValue) this->resetValues();
+uint8_t SerialCommunication::getArrivedValue() {
+    if (this->arrivedValue) this->resetValues();
     return this->value;
 }
 
@@ -69,5 +69,5 @@ void SerialCommunication::resetValues() {
     this->toggleMode = false;
     this->restoredConnection = false;
     this->unconnectedMode = false;
-    this->_arrivedValue = false;
+    this->arrivedValue = false;
 }

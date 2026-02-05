@@ -7,12 +7,14 @@
 class SerialCommunication {
 
     public:
-        void loop();
+        void loop(); // Check if there are incoming messages and set the corresponding flag
+        // When these methods are invoked, the corresponding flag is reset
         bool isToggleMode();
         bool isUnconnectedMode();
         bool isConnectionRestored();
+        // The arrived value flag is reset only when the value is read
         bool isValueArrived();
-        uint8_t arrivedValue();
+        uint8_t getArrivedValue();
         void sendToggleMode();
         void sendOpeningChanged(int val);
 
@@ -20,10 +22,9 @@ class SerialCommunication {
         bool toggleMode = false;
         bool unconnectedMode = false;
         bool restoredConnection = false;
-        bool _arrivedValue = false;
+        bool arrivedValue = false;
         uint8_t value;
         void resetValues();
-
 };
 
 #endif

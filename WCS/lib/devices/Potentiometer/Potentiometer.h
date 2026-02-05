@@ -7,8 +7,9 @@
 class Potentiometer: public Slider {
 
     public:
-        Potentiometer(uint8_t pin);
+        // The tollerance can be used to consider unchanged the read if it falls within a certain range
         Potentiometer(uint8_t pin, uint16_t tollerance);
+        Potentiometer(uint8_t pin); // Consider zero tollerance
         bool isChanged() override;
         uint8_t getValue() override;
         void start() override;
