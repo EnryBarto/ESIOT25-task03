@@ -22,7 +22,7 @@ void LoggerTask::tick() {
                 this->currState = NOT_DETECTING;
             } else {
                 this->distance = this->sensor->getDistance();
-                snprintf(this->msgBuffer, MQTT_MSG_BUFFER_SIZE, "%ld", this->distance);
+                snprintf(this->msgBuffer, MQTT_MSG_BUFFER_SIZE, "%ld", this->distance == NO_OBJ_DETECTED ? -1 : this->distance);
                 bool publishStatus = this->sharedData->getMqttClient()->publish(MQTT_TOPIC, this->msgBuffer);
                 this->sharedData->setMqttError(!publishStatus);
                 #ifdef DEBUG

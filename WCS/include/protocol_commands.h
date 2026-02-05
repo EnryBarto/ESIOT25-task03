@@ -5,6 +5,5 @@
 #define UNCONNECTED_CMD    '1'
 #define RESTORED_CON_CMD   '2'
 #define SET_VALUE_CMD      '3'
-#define REQUEST_STATUS_CMD '4'
 
 #endif

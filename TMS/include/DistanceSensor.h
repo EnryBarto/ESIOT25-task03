@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define NO_OBJ_DETECTED UINT16_MAX
+
 class DistanceSensor {
 
     public:
