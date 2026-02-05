@@ -62,7 +62,15 @@ function parseChart(json) {
         options: {
             animation: false,
             legend: { display: false },
-            maintainAspectRatio: false
+            maintainAspectRatio: false,
+            scales: {
+                yAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Distance [cm]'
+                    }
+                }]
+            }
         }
     });
 }

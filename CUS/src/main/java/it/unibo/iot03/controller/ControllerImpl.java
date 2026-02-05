@@ -17,8 +17,8 @@ import it.unibo.iot03.model.impl.WcsImpl;
 
 public class ControllerImpl implements Controller {
 
-    private final static int L1 = 20;
-    private final static int L2 = 60;
+    private final static int L1 = 50;
+    private final static int L2 = 30;
     private final static int VALVE_CLOSED = 0;
     private final static int VALVE_HALF   = 50;
     private final static int VALVE_OPEN   = 100;
@@ -125,17 +125,17 @@ public class ControllerImpl implements Controller {
                     } else if (this.tms.isNewValueReceived()) {
                         switch (this.currentAutoState) {
                             case CLOSED:
-                                if (this.tms.getLastValue() >= L2) {
+                                if (this.tms.getLastValue() <= L2) {
                                     this.currentAutoState = AutoState.OPEN;
-                                } else if (this.tms.getLastValue() >= L1) {
+                                } else if (this.tms.getLastValue() <= L1) {
                                     this.currentAutoState = AutoState.CLOSED_WAITING;
                                 }
                                 break;
 
                             case CLOSED_WAITING:
-                                if (this.tms.getLastValue() < L1) {
+                                if (this.tms.getLastValue() > L1) {
                                     this.currentAutoState = AutoState.CLOSED;
-                                } else if (this.tms.getLastValue() >= L2) {
+                                } else if (this.tms.getLastValue() <= L2) {
                                     this.currentAutoState = AutoState.OPEN;
                                 } else if (ChronoUnit.MILLIS.between(this.timer, LocalDateTime.now()) >= HYSTERESIS_TIME) {
                                     this.currentAutoState = AutoState.HALF;
@@ -143,17 +143,17 @@ public class ControllerImpl implements Controller {
                                 break;
 
                             case HALF:
-                                if (this.tms.getLastValue() >= L2) {
+                                if (this.tms.getLastValue() <= L2) {
                                     this.currentAutoState = AutoState.OPEN;
-                                } else if (this.tms.getLastValue() < L1) {
+                                } else if (this.tms.getLastValue() > L1) {
                                     this.currentAutoState = AutoState.CLOSED;
                                 }
                                 break;
 
                             case OPEN:
-                                if (this.tms.getLastValue() < L1) {
+                                if (this.tms.getLastValue() > L1) {
                                     this.currentAutoState = AutoState.CLOSED;
-                                } else if (this.tms.getLastValue() < L2) {
+                                } else if (this.tms.getLastValue() > L2) {
                                     this.currentAutoState = AutoState.HALF;
                                 }
                                 break;
@@ -219,10 +219,10 @@ public class ControllerImpl implements Controller {
             if (this.currentState != this.precState) {
                 switch (this.currentState) {
                     case AUTO:
-                        if (this.tms.getLastValue() >= L2) {
+                        if (this.tms.getLastValue() <= L2) {
                             this.currentAutoState = AutoState.OPEN;
                             this.wcs.sendSetValve(VALVE_OPEN);
-                        } else if (this.tms.getLastValue() < L1) {
+                        } else if (this.tms.getLastValue() > L1) {
                             this.currentAutoState = AutoState.CLOSED;
                             this.wcs.sendSetValve(VALVE_CLOSED);
                         } else {

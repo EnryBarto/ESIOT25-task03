@@ -11,7 +11,7 @@ import it.unibo.iot03.model.api.Tms;
 
 public class TmsImpl implements Tms {
 
-    public final static int MAX_VALUES = 100;
+    public final static int MAX_VALUES = 100; // Max number of elements to keep in the queue
     private LocalDateTime lastValueTime;
     private final Queue<Data> history = new ConcurrentLinkedQueue<>();
     private int lastValue;
@@ -25,6 +25,7 @@ public class TmsImpl implements Tms {
 
     @Override
     public void addValue(final int value) {
+        if (value == -1) return; // We ignore invalid values
         if (this.history.size() >= MAX_VALUES) this.history.poll();
         this.history.add(new Data(value));
         this.lastValueTime = LocalDateTime.now();
