@@ -34,12 +34,14 @@ public class HttpServer extends AbstractVerticle {
 	@Override
 	public void start() {
 		Router router = Router.router(vertx);
-		router.route().handler(CorsHandler.create()
-				.addOrigin("*")
-				.allowedMethod(HttpMethod.GET)
-				.allowedMethod(HttpMethod.POST)
-				.allowedMethod(HttpMethod.OPTIONS)
-				.allowedHeader("Content-Type"));
+		router.route()
+			.handler(
+				CorsHandler.create()
+					.addOrigin("*")
+					.allowedMethod(HttpMethod.GET)
+					.allowedMethod(HttpMethod.POST)
+					.allowedHeader("Content-Type")
+				);
 		router.route().handler(BodyHandler.create());
 		router.post("/api/opening").handler(this::handleSetOpening);
 		router.get("/api/data").handler(this::handleGetData);
@@ -49,10 +51,10 @@ public class HttpServer extends AbstractVerticle {
 			.createHttpServer()
 			.requestHandler(router)
 			.listen(port);
-
 		log("Service ready on port: " + port);
 	}
 
+	// Set the opening of the valve
 	private void handleSetOpening(RoutingContext routingContext) {
 		HttpServerResponse response = routingContext.response();
 		log("New msg "+routingContext.body().asString());
@@ -73,6 +75,7 @@ public class HttpServer extends AbstractVerticle {
 		}
 	}
 
+	// Send the values read by the TMS
 	private void handleGetData(RoutingContext routingContext) {
 		JsonArray arr = new JsonArray();
 		for (Data p: this.tms.getHistory()) {
@@ -86,6 +89,7 @@ public class HttpServer extends AbstractVerticle {
 			.end(arr.encodePrettily());
 	}
 
+	// Switch the WCS between AUTO and MANUAL
 	private void handleToggle(RoutingContext routingContext) {
 		log("Toggle requested");
 		this.controller.toggleMode();
@@ -94,7 +98,7 @@ public class HttpServer extends AbstractVerticle {
 			.end();
 	}
 
-
+	// Send the current status and the valve opening value
 	private void handleGetStatus(RoutingContext routingContext) {
 		JsonObject data = new JsonObject();
 		data.put("status", this.controller.getState());

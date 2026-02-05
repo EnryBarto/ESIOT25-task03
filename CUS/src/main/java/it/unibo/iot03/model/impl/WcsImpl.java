@@ -50,10 +50,12 @@ public class WcsImpl implements Wcs {
                 String buf = this.serialCom.receiveMsg();
                 System.out.println("[    WCS    ] New serial message: " + buf);
                 switch (buf.charAt(0)) {
+                    // The WCS requested to toggle mode
                     case '0':
                         this.toggleModeRequested = true;
                         break;
 
+                    // The WCS updates the valve opening
                     case '3':
                         String val = buf.substring(2);
                         this.valveLevel = Integer.parseInt(val);
