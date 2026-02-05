@@ -22,4 +22,6 @@ public interface Controller {
     void startMqttBroker(int port);
     void startHttpServer(int port);
     void run();
+    boolean toggleMode();
+    boolean setValveOpening(int value);
 }

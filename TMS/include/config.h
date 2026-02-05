@@ -13,7 +13,7 @@
 /* ------------------- TASKS ------------------- */
 #define CONNECTION_TASK_DELAY 500
 #define STATUS_TASK_DELAY 1000
-#define LOGGER_TASK_DELAY 5000
+#define LOGGER_TASK_DELAY 2000
 
 /* ------------------- MQTT ------------------- */
 #define MQTT_SERVER "192.168.1.16"

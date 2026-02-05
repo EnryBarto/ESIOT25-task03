@@ -13,7 +13,8 @@ class SerialCommunication {
         bool isConnectionRestored();
         bool isValueArrived();
         uint8_t arrivedValue();
-        void requestOpeningValue();
+        void sendToggleMode();
+        void sendOpeningChanged(int val);
 
     private:
         bool toggleMode = false;

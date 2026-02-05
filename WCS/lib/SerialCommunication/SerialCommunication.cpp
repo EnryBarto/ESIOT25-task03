@@ -55,8 +55,14 @@ uint8_t SerialCommunication::arrivedValue() {
     return this->value;
 }
 
-void SerialCommunication::requestOpeningValue() {
-    Serial.println(REQ_OPENING_CMD);
+void SerialCommunication::sendToggleMode() {
+    Serial.println(TOGGLE_MODE_CMD);
+}
+
+void SerialCommunication::sendOpeningChanged(int val) {
+    char buf[6];
+    sprintf(buf, "%c-%d", SET_VALUE_CMD, val);
+    Serial.println(buf);
 }
 
 void SerialCommunication::resetValues() {

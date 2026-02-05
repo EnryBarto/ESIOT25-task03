@@ -21,6 +21,7 @@ void MainTask::tick() {
         case AUTOMATIC:
             if (this->modeButton->isPressed() || this->serialCom.isToggleMode()) {
                 this->currentState = MANUAL;
+                this->serialCom.sendToggleMode();
             } else if (this->serialCom.isUnconnectedMode()) {
                 this->currentState = UNCONNECTED_AUTO;
             } else if (this->serialCom.isValueArrived()) {
@@ -31,6 +32,7 @@ void MainTask::tick() {
         case MANUAL:
             if (this->modeButton->isPressed() || this->serialCom.isToggleMode()) {
                 this->currentState = AUTOMATIC;
+                this->serialCom.sendToggleMode();
             } else if (this->potentiometer->isChanged()) {
                 this->currentManualMode = PHYSICAL;
             } else if (this->serialCom.isValueArrived()) {
@@ -43,13 +45,17 @@ void MainTask::tick() {
             switch (this->currentManualMode) {
                 case PHYSICAL:
                     if (this->potentiometer->isChanged()) {
-                        setOpening(this->potentiometer->getValue());
+                        uint8_t value = this->potentiometer->getValue();
+                        setOpening(value);
+                        this->serialCom.sendOpeningChanged(value);
                     }
                     break;
 
                 case VIRTUAL:
                     if (this->serialCom.isValueArrived()) {
-                        setOpening(this->serialCom.arrivedValue());
+                        uint8_t value = this->serialCom.arrivedValue();
+                        setOpening(value);
+                        this->serialCom.sendOpeningChanged(value);
                     }
                     break;
             }
@@ -72,7 +78,6 @@ void MainTask::tick() {
     if (currentState != precState) {
         switch (this->currentState) {
             case AUTOMATIC:
-                this->serialCom.requestOpeningValue();
                 lcd->clearRow(MODE_LCD_ROW);
                 lcd->print("Mode: AUTOMATIC", MODE_LCD_ROW, 0);
                 lcd->clearRow(VALUE_LCD_ROW);

@@ -19,7 +19,10 @@ public class ControllerImpl implements Controller {
 
     private final static int L1 = 20;
     private final static int L2 = 60;
-    private final static int HYSTERESIS_TIME = 5000;
+    private final static int VALVE_CLOSED = 0;
+    private final static int VALVE_HALF   = 50;
+    private final static int VALVE_OPEN   = 100;
+    private final static int HYSTERESIS_TIME = 5000; // T1 period
 
     private State currentState;
     private State precState;
@@ -71,8 +74,29 @@ public class ControllerImpl implements Controller {
 
     @Override
     public void startHttpServer(final int port) {
-		HttpServer httpServer = new HttpServer(port, this.tms);
+		HttpServer httpServer = new HttpServer(port, this.tms, this);
 		vertx.deployVerticle(httpServer);
+    }
+
+    @Override
+    public boolean toggleMode() {
+        if (this.currentState == State.AUTO || this.currentState == State.MANUAL) {
+            this.wcs.sendStateToggle();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean setValveOpening(final int value) {
+        if (this.currentState == State.MANUAL) {
+            if (value >= 0 && value <= 100) {
+                this.wcs.sendSetValve(value);
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -85,19 +109,15 @@ public class ControllerImpl implements Controller {
 
         while (true) {
 
-            if (this.serialCom.isMsgAvailable()) {
-                try {
-                    System.out.println(this.serialCom.receiveMsg());
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+            this.wcs.loopSerial();
 
             switch (this.currentState) {
 
                 case AUTO:
 
-                    if (this.tms.isNewValueReceived()) {
+                    if (this.wcs.isToggleModeRequested()) {
+                        this.currentState = State.MANUAL;
+                    } else if (this.tms.isNewValueReceived()) {
                         switch (this.currentAutoState) {
                             case CLOSED:
                                 if (this.tms.getLastValue() >= L2) {
@@ -140,22 +160,22 @@ public class ControllerImpl implements Controller {
                     if (this.precAutoState != this.currentAutoState) {
                         switch (this.currentAutoState) {
                             case CLOSED:
-                                this.wcs.sendSetValve(0);
+                                this.wcs.sendSetValve(VALVE_CLOSED);
                                 break;
                             case CLOSED_WAITING:
                                 this.timer = LocalDateTime.now();
                                 break;
                             case HALF:
-                                this.wcs.sendSetValve(50);
+                                this.wcs.sendSetValve(VALVE_HALF);
                                 break;
                             case OPEN:
-                                this.wcs.sendSetValve(100);
+                                this.wcs.sendSetValve(VALVE_OPEN);
                                 break;
                             default:
                                 break;
                         }
                         this.precAutoState = this.currentAutoState;
-                        System.out.println("[CUS] CAMBIO STATO AUTO: ENTRO IN " + this.currentAutoState);
+                        System.out.println("[    CUS    ] AUTO STATE CHANGED - New State: " + this.currentAutoState);
                     }
                     break;
 
@@ -174,6 +194,9 @@ public class ControllerImpl implements Controller {
                     break;
 
                 case MANUAL:
+                    if (this.wcs.isToggleModeRequested()) {
+                        this.currentState = State.AUTO;
+                    }
                     break;
                 default:
                     break;
@@ -190,7 +213,6 @@ public class ControllerImpl implements Controller {
             if (this.currentState != this.precState) {
                 switch (this.currentState) {
                     case AUTO:
-                        if (this.precState == State.MANUAL) this.wcs.sendStateToggle();
                         if (this.tms.getLastValue() >= L2) {
                             this.currentAutoState = AutoState.OPEN;
                         } else if (this.tms.getLastValue() < L1) {
@@ -203,7 +225,6 @@ public class ControllerImpl implements Controller {
                         break;
 
                     case MANUAL:
-                        if (this.precState == State.AUTO) this.wcs.sendStateToggle();
                         break;
 
                     case UNCONNECTED_AUTO:
@@ -219,7 +240,7 @@ public class ControllerImpl implements Controller {
 
                 }
                 this.precState = this.currentState;
-                System.out.println("[CUS] CAMBIO STATO: ENTRO IN " + this.currentState);
+                System.out.println("[    CUS    ] STATE CHANGED - New State: " + this.currentState);
             }
 
             try {

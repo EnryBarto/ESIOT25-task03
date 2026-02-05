@@ -9,4 +9,7 @@ public interface Wcs {
     void sendUnconnected();
     void sendReconnected();
     void sendSetValve(int i);
+    int getValveLevel();
+    void loopSerial();
+    boolean isToggleModeRequested();
 }

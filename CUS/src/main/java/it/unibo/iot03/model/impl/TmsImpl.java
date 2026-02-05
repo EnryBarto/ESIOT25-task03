@@ -14,7 +14,7 @@ public class TmsImpl implements Tms {
     private LocalDateTime lastValueTime;
     private final Queue<Data> history = new ConcurrentLinkedQueue<>();
     private int lastValue;
-    private final static int TIMEOUT_TIME = 10000;
+    private final static int TIMEOUT_TIME = 5000; // T2 period
     private boolean isThereNewVal;
 
     public TmsImpl() {
