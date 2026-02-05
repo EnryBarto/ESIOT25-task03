@@ -74,7 +74,7 @@ public class ControllerImpl implements Controller {
 
     @Override
     public void startHttpServer(final int port) {
-		HttpServer httpServer = new HttpServer(port, this.tms, this);
+		HttpServer httpServer = new HttpServer(port, this.tms, this.wcs, this);
 		vertx.deployVerticle(httpServer);
     }
 
@@ -97,6 +97,11 @@ public class ControllerImpl implements Controller {
             }
         }
         return false;
+    }
+
+    @Override
+    public State getState() {
+        return this.currentState;
     }
 
     @Override

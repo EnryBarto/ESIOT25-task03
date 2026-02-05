@@ -10,7 +10,7 @@ public record Data(LocalDateTime timestamp, int value) {
     }
 
     public String formattedTime() {
-		return this.timestamp.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+		return this.timestamp.format(DateTimeFormatter.ofPattern("dd-MM-yy HH:mm:ss"));
     }
 
 }

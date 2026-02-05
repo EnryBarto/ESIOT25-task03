@@ -24,4 +24,5 @@ public interface Controller {
     void run();
     boolean toggleMode();
     boolean setValveOpening(int value);
+    State getState();
 }

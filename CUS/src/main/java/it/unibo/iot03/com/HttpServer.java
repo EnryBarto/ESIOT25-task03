@@ -1,15 +1,18 @@
 package it.unibo.iot03.com;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.CorsHandler;
 import it.unibo.iot03.controller.Controller;
 import it.unibo.iot03.model.Data;
 import it.unibo.iot03.model.api.Tms;
+import it.unibo.iot03.model.api.Wcs;
 
 /*
  * Data Service as a vertx event-loop
@@ -18,20 +21,30 @@ public class HttpServer extends AbstractVerticle {
 
 	private int port;
 	private final Tms tms;
+	private final Wcs wcs;
 	private final Controller controller;
 
-	public HttpServer(final int port, final Tms logic, final Controller controller) {
+	public HttpServer(final int port, final Tms logic, final Wcs wcs, final Controller controller) {
 		this.port = port;
 		this.tms = logic;
+		this.wcs = wcs;
 		this.controller = controller;
 	}
 
 	@Override
 	public void start() {
 		Router router = Router.router(vertx);
+		router.route().handler(CorsHandler.create()
+				.addOrigin("*")
+				.allowedMethod(HttpMethod.GET)
+				.allowedMethod(HttpMethod.POST)
+				.allowedMethod(HttpMethod.OPTIONS)
+				.allowedHeader("Content-Type"));
 		router.route().handler(BodyHandler.create());
-		router.post("/api/data").handler(this::handleAddNewData);
+		router.post("/api/opening").handler(this::handleSetOpening);
 		router.get("/api/data").handler(this::handleGetData);
+		router.get("/api/status").handler(this::handleGetStatus);
+		router.post("/api/toggle").handler(this::handleToggle);
 		vertx
 			.createHttpServer()
 			.requestHandler(router)
@@ -40,21 +53,14 @@ public class HttpServer extends AbstractVerticle {
 		log("Service ready on port: " + port);
 	}
 
-	private void handleAddNewData(RoutingContext routingContext) {
+	private void handleSetOpening(RoutingContext routingContext) {
 		HttpServerResponse response = routingContext.response();
 		log("New msg "+routingContext.body().asString());
 		JsonObject res = routingContext.body().asJsonObject();
 		if (res == null) {
 			sendError(400, response);
 		} else {
-			if (res.containsKey("toggle")) {
-				if (this.controller.toggleMode()) {
-					response.setStatusCode(200).end();
-				} else {
-					sendError(400, response);
-				}
-				this.log("Requested state toggle");
-			} else if (res.containsKey("value")) {
+			if (res.containsKey("value")) {
 				int value = Integer.parseInt(res.getString("value"));
 				if (this.controller.setValveOpening(value)) {
 					response.setStatusCode(200).end();
@@ -78,6 +84,24 @@ public class HttpServer extends AbstractVerticle {
 		routingContext.response()
 			.putHeader("content-type", "application/json")
 			.end(arr.encodePrettily());
+	}
+
+	private void handleToggle(RoutingContext routingContext) {
+		log("Toggle requested");
+		this.controller.toggleMode();
+		routingContext.response()
+			.putHeader("content-type", "application/json")
+			.end();
+	}
+
+
+	private void handleGetStatus(RoutingContext routingContext) {
+		JsonObject data = new JsonObject();
+		data.put("status", this.controller.getState());
+		data.put("opening", this.wcs.getValveLevel());
+		routingContext.response()
+			.putHeader("content-type", "application/json")
+			.end(data.encodePrettily());
 	}
 
 	private void sendError(int statusCode, HttpServerResponse response) {
