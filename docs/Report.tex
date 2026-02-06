@@ -1,0 +1,545 @@
+\documentclass[12pt,a4paper]{report}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+\usepackage{alltt, fancyvrb, url}
+\usepackage{graphicx}
+\usepackage[utf8]{inputenc}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{longtable}
+\usepackage{listings}
+\usepackage{color}
+
+
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{geometry}
+\usepackage{pdfpages}
+\usepackage{caption}
+\usepackage{booktabs}
+
+\geometry{
+    top=1.5in, 
+    bottom=1in,
+    left=1in,
+    right=1in,
+    headsep=0.65in
+}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\usepackage{newlfont}
+\usepackage{gensymb}
+
+\usepackage[italian]{babel}
+\usepackage[capitalise, italian]{cleveref}
+
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+
+\graphicspath{{../}}
+
+\fancypagestyle{soloNumero}{
+    \fancyhf{} % Pulisce tutto
+    \renewcommand{\headrulewidth}{0pt} % Rimuove linea superiore
+    \renewcommand{\footrulewidth}{0pt} % Rimuove linea inferiore
+    \fancyfoot[R]{\thepage} % Numero solo a destra
+}\pagestyle{fancy}
+\fancyhf{}
+
+% --- HEADER (Testata) ---
+% Titolo pulito a sinistra (pari), Capitolo in Maiuscoletto a destra (dispari)
+\fancyhead[LE]{Assignment \#03 - Smart Tank Monitoring System}
+\fancyhead[RO]{\textsc{\nouppercase{\leftmark}}} % Small Caps e rimuove il forcing del maiuscolo
+
+% --- FOOTER (Piè di pagina) ---
+\fancyfoot[LE,RO]{\thepage}
+\fancyfoot[LO,RE]{\footnotesize Sistemi Embedded e IoT} % Font leggermente più piccolo per il corso
+
+% --- STILE LINEE ---
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% --- RIDEFINIZIONE STILE PLAIN (Pagine inizio capitolo) ---
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyhead[L]{\footnotesize Assignment \#03 - Smart Tank Monitoring System}
+  \fancyfoot[R]{\thepage}
+  \renewcommand{\headrulewidth}{0.4pt}
+  \renewcommand{\footrulewidth}{0pt} % Rimuove la linea inferiore nelle pagine d'inizio
+}
+
+% --- CONFIGURAZIONE MARKS ---
+\renewcommand{\chaptermark}[1]{%
+  \markboth{#1}{}% Memorizza solo il titolo senza "Capitolo X" per massima leggerezza
+}
+
+\textwidth=450pt\oddsidemargin=0pt
+\begin{document}
+
+\begin{titlepage}
+    \begin{center}
+        {{\Large{\textsc{Alma Mater Studiorum $\cdot$ Università di Bologna}}}} \rule[0.1cm]{15.8cm}{0.1mm}
+        \rule[0.5cm]{15.8cm}{0.6mm}
+        {\small{\bf CORSO DI LAUREA IN INGEGNERIA E SCIENZE INFORMATICHE \\ A.A. 2025/26 }}
+    \end{center}
+    \vspace{15mm}
+    \begin{center}
+        {\LARGE{\bf Assignment \#03 - Smart Tank Monitoring System}}
+    \end{center}
+    \begin{center}
+        {\LARGE Relazione per il corso di Sistemi Embedded e IoT }
+    \end{center}
+
+    \vspace{15mm}
+    \begin{center}
+        \includegraphics[width=0.8\textwidth]{assignment-03-sketch}
+    \end{center}
+    \vspace{25mm}
+
+    Bartocetti Enrico, matr. 0001115097
+\end{titlepage}
+
+\tableofcontents
+
+\chapter{Traccia}
+
+\section{Componenti}
+Il sistema è composto da quattro sottosistemi:
+\begin{itemize}
+	\item \textbf{Tank Monitoring Subsystem} - \texttt{TMS}
+	\begin{itemize}
+		\item Basato su sistema embedded \textbf{ESP} per monitorare il livello dell'acqua piovana nel serbatoio.
+		\item Interagisce con il Control Unit Subsystem (CUS) via \textbf{MQTT}.
+	\end{itemize}
+	\item \textbf{Control Unit Subsystem} - \texttt{CUS}
+	\begin{itemize}
+		\item \textbf{Back-end} eseguito su PC.
+		\item È il sottosistema principale che governa e \textbf{coordina l'intero sistema}.
+		\item Interagisce via \textbf{MQTT} con il TMS.
+		\item Interagisce tramite linea \textbf{seriale} con il Water Channels Subsystem (WCS).
+		\item Interagisce via \textbf{HTTP} con il Dashboard Subsystem (DBS).
+	\end{itemize}
+	\item \textbf{Water Channel Subsystem} - \texttt{WCS}
+	\begin{itemize}
+		\item Basato su \textbf{Arduino}.
+		\item Sistema embedded che controlla il canale di scolo che collega il serbatoio alla rete idrica.
+		\item Interagisce via \textbf{seriale} con il CUS.
+		\item Fornisce un pannello per l'\textbf{interazione in loco} degli operatori umani.
+	\end{itemize}
+	\item \textbf{Dashboard Subsystem} - \texttt{DBS}
+	\begin{itemize}
+		\item \textbf{Frontend / Web app} eseguita su PC o qualsiasi dispositivo.
+		\item Interfaccia per \textbf{operatori remoti} per visualizzare i dati e interagire con il sistema via \textbf{HTTP} con il CUS.
+	\end{itemize}
+\end{itemize}
+
+\section{Comportamento}
+Il sistema monitora il livello dell'acqua piovana nel serbatoio e controlla l'apertura di un canale di scolo.
+\\
+Opera in due modalità: \textbf{AUTOMATICA} (default all'avvio) o \textbf{MANUALE}.
+
+\subsection{Dettagli Operativi}
+\begin{itemize}
+	\item \textbf{TMS}: Monitora costantemente il livello dell'acqua tramite il sonar
+	\begin{itemize}
+		\item Campiona i dati a una frequenza $F$ e li invia al CUS.
+		\item LED: Verde acceso / Rosso spento se il sistema è online; Verde spento / Rosso acceso in caso di problemi di rete.
+	\end{itemize}
+	\item \textbf{WCS}: Controlla una valvola motorizzata
+	\begin{itemize}
+		\item Apertura: Da 0\% (0°) a 100\% (90°).
+		\item Interazione: Un pulsante commuta tra modalità AUTOMATICA e MANUALE. In modalità manuale, l'apertura è regolata dal potenziometro.
+		\item LCD: Visualizza il livello di apertura attuale e la modalità corrente (\texttt{AUTOMATIC}, \texttt{MANUAL} o \texttt{UNCONNECTED}).
+	\end{itemize}
+	\item \textbf{CUS}: Gestisce la logica di controllo
+	\begin{itemize}
+		\item Se il livello supera $L1$ (ma $< L2$) per un tempo $> T1$, la valvola si apre al 50\% finché il livello non scende sotto $L1$.
+		\item Se il livello supera $L2$, la valvola si apre immediatamente al 100\% finché il valore non scende sotto $L2$.
+		\item Se non riceve dati dal TMS per un tempo $> T2$, entra nello stato \texttt{UNCONNECTED}.
+	\end{itemize}
+	\item \textbf{DBS}: Dashboard di visualizzazione che include
+	\begin{itemize}
+		\item Grafico del livello dell'acqua (ultime $N$ misurazioni).
+		\item Percentuale di apertura della valvola e stato del sistema (\texttt{MANUAL}, \texttt{AUTOMATIC}, \texttt{UNCONNECTED} o \texttt{NOT AVAILABLE} se il CUS non è raggiungibile).
+		\item Controlli GUI per cambiare modalità e regolare l'apertura (in \texttt{MANUAL}).
+	\end{itemize}
+\end{itemize}
+
+\chapter{Progettazione dei Sottosistemi}
+
+\section{TMS - Tank Monitoring Subsystem}
+
+\subsection{Hardware}
+
+\begin{figure}[H]
+	\centering{}
+	\includegraphics[width=0.85\textwidth]{TMS/docs/Circuit}
+	\caption{Rappresentazione schematica dell'hardware del TMS}
+\end{figure}
+
+Lato hardware sono stati utilizzati i seguenti componenti:
+\begin{itemize}
+	\item SoC: ESP32
+	\item Sensore livello acqua: Sonar HC-SR04
+	\item LED verde e rosso
+\end{itemize}
+Nel circuito reale è stato utilizzato anche un Logic Level Converter per convertire il livello logico dell'ESP32 di 3.3V con quello del sensore di 5V, permettendo di alimentare il sensore con la tensione da lui richiesta.
+\\
+Per l'elenco esaustivo dei pin utilizzati vedi \cref{table:TmsPin}.
+
+\subsection{Software}
+
+\paragraph{}
+Lato software l'architettura del TMS è basata su delle \textbf{task}, eseguite dal sistema operativo dell'ESP32. 
+
+Ogni task è basata su una \textbf{macchina a stati finiti} (FSM) (vedi schema in \cref{fig:TmsStateDiagram} a Pag. \pageref{fig:TmsStateDiagram}), da eseguire ogni certo periodo di tempo (vedi \cref{table:TmsTaskScheduling}). La comunicazione tra task avviene grazie a una struttura dati condivisa (la classe \texttt{SharedData}).
+
+L'esecuzione periodica delle task avviene nella seguente maniera:
+\begin{enumerate}
+	\item All'oggetto \texttt{Scheduler} viene passata la \textbf{task da eseguire} con il relativo \textbf{periodo}
+	\item Lo scheduler crea un oggetto \texttt{TaskExecutor}, contenente la task da eseguire, il periodo e la struttura dati condivisa
+	\item Tramite la \textbf{chiamata al sistema operativo} \texttt{xTaskCreatePinnedToCore} lo scheduler \textbf{mette in esecuzione} il metodo statico \texttt{execute} del TaskExecutor, passando come parametro l'oggetto \texttt{TaskExecutor} creato precedentemente
+	\item Il metodo execute esegue il metodo \texttt{init} della Task associata
+	\item Entra successivamente in un \textbf{ciclo infinito} in cui a ogni iterazione viene prima eseguito il metodo \texttt{tick} della Task, poi messa in pausa l'esecuzione sfruttando la primitiva \texttt{vTaskDelayUntil} di FreeRTOS per il periodo di tempo scelto
+\end{enumerate}
+
+\paragraph{}
+Le classi sono descritte nel diagramma delle classi \cref{fig:TmsClassDiagram}, Pag. \pageref{fig:TmsClassDiagram}.
+
+\paragraph{}
+La comunicazione dei dati rilevati al CUS avviene tramite protocollo \textbf{MQTT}, pubblicando la lettura nel topic \texttt{water\_level}.
+
+\paragraph{}
+Breve descrizione delle task:
+\begin{itemize}
+	\item \textbf{LoggerTask:} In assenza di errori di rete, esegue la lettura per poi pubblicarla tramite MQTT.
+	\item \textbf{StatusTask:} Accende e spegne i LED di stato, verde in caso di connessione corretta e rosso in caso di problemi.
+	\item \textbf{ConnectionTask:} Controlla che le connessioni WiFi e MQTT siano funzionanti, tentando di riconnettersi in caso di problemi.
+\end{itemize}
+
+\includepdf[
+    pages=1,
+    scale=0.85,
+    addtotoc={1, subsubsection, 2, {Diagramma degli stati delle FSM}, null},
+    pagecommand={
+        \phantomsection
+        \refstepcounter{figure}
+        \label{fig:TmsStateDiagram}
+    }
+]{TMS/docs/State_Diagram.pdf}
+
+\includepdf[
+    pages=1,
+    scale=0.8,
+    landscape,
+    addtotoc={1, subsubsection, 2, {Diagramma delle classi}, null},
+    pagecommand={
+        \phantomsection
+        \refstepcounter{figure}
+        \label{fig:TmsClassDiagram}
+    }
+]{TMS/docs/Class_Diagram.pdf}
+
+
+\section{CUS - Control Unit Subsystem}
+
+\paragraph{}
+Il CUS è il cuore del sistema: per questo necessita di avere una propria rappresentazione interna dello stato complessivo, descritto nel diagramma degli stati in \cref{fig:CusStateDiagram} a Pag. \pageref{fig:CusStateDiagram}. I valori dei parametri utilizzati nel diagramma degli stati sono specificati nell'\cref{app:Parametri}.
+
+È un \textbf{processo server} che controlla e mette in comunicazione i vari sottosistemi, realizzato utilizzando il linguaggio \texttt{Java} e sfruttando \texttt{Gradle} per la compilazione. Per i server HTTP e MQTT è stata sfruttata la libreria \texttt{VertX}, specificando le azioni da eseguire per ogni evento da gestire, mentre per la comunicazione seriale viene utilizzata la libreria \texttt{jssc}. Si riporta il diagramma delle classi in \cref{fig:CusClassDiagram} a Pag. \pageref{fig:CusClassDiagram}.
+
+\paragraph{}
+Nello specifico:
+\begin{itemize}
+	\item \textbf{Memorizza} i dati ricevuti dal TMS via \textbf{MQTT}, controllando che non passi troppo tempo dall'ultima comunicazione (entrando altrimenti nello stato \texttt{UNCONNECTED}).
+	\item \textbf{Risponde} alle richieste \textbf{HTTP} create dal DBS (descritte nella \cref{sec:ApiHttp}):
+	\begin{itemize}
+		\item Restituisce le ultime $N$ letture del TMS
+		\item Restituisce lo stato del sistema e il livello di apertura della valvola
+		\item Cambia la modalità tra \texttt{AUTOMATIC} e \texttt{MANUAL}
+		\item Se in manuale, imposta l'apertura della valvola sulla base del parametro comunicato
+	\end{itemize} 
+	\item Quando in modalità automatica, \textbf{comunica} al WCS tramite seriale il \textbf{livello di apertura della valvola} sulla base delle letture inviate dal TMS.
+	\item Quando in modalità manuale, riceve tramite seriale il livello di apertura corrente della valvola (sia che sia stato impostato tramite potenziometro, sia che sia stato impostato tramite seriale).
+\end{itemize}
+
+\paragraph{}
+All'avvio dell'app verranno richiesti all'utente di indicare tutti i parametri di connessione, ovvero porta seriale e velocità in baud del WCS, porta del server HTTP e porta del broker MQTT.
+
+\includepdf[
+    pages=1,
+    scale=0.8,
+    landscape,
+    addtotoc={1, subsubsection, 2, {Diagramma degli stati}, null},
+    pagecommand={
+        \phantomsection
+        \refstepcounter{figure}
+        \label{fig:CusStateDiagram}
+    }
+]{CUS/docs/State_Diagram.pdf}
+
+\includepdf[
+    pages=1,
+    scale=0.85,
+    landscape,
+    addtotoc={1, subsubsection, 2, {Diagramma delle classi}, null},
+    pagecommand={
+        \phantomsection
+        \refstepcounter{figure}
+        \label{fig:CusClassDiagram}
+    }
+]{CUS/docs/Class_Diagram.pdf}
+
+\section{WCS - Water Channel Subsystem}
+
+\subsection{Hardware}
+
+\begin{figure}[H]
+	\centering{}
+	\includegraphics[width=0.87\textwidth]{WCS/docs/Circuit}
+	\caption{Rappresentazione schematica dell'hardware del WCS}
+\end{figure}
+
+Lato hardware sono stati utilizzati i seguenti componenti:
+\begin{itemize}
+	\item Microcontrollore: Arduino Uno
+	\item Display: LCD con interfaccia I2C
+          \item Servomotore: Microservo SG90
+	\item Selettore apertura valvola: Potenziometro analogico
+	\item Switch tra modalità: Pulsante tattile
+\end{itemize}
+Per l'elenco esaustivo dei pin utilizzati vedi \cref{table:WcsPin}.
+
+\subsection{Software}
+
+\paragraph{}
+Come per il TMS, l'architettura del WCS è basata su delle \textbf{task}: l'Arduino non è però dotato di un sistema operativo, rendendo quindi necessaria l'implementazione di uno \textbf{scheduler}, basato in questo caso sul Timer2 del microcontrollore.
+
+Data la semplicità di questo sottosistema, è stata sviluppata una sola task basata su una \textbf{macchina a stati finiti} (FSM), di cui si riporta lo schema in \cref{fig:WcsStateDiagram} a Pag. \pageref{fig:WcsStateDiagram}.
+
+Lo scheduler ogni 50ms controlla se è passato abbastanza tempo per eseguire una task, e in caso affermativo la esegue. Durante questi 50ms l'arduino viene posto in \textbf{sleep mode} di tipo IDLE, e viene risvegliato tramite il Timer2. La scelta della sleep mode è ricaduta sulla IDLE così che non vengano persi eventuali comandi ricevuti sulla seriale.
+
+\paragraph{}
+Si riporta il diagramma delle classi dell'\textbf{architettura software} in \cref{fig:WcsClassDiagram} a Pag. \pageref{fig:WcsClassDiagram}.
+
+\paragraph{}
+La comunicazione con il CUS avviene tramite \textbf{porta seriale}, seguendo il protocollo indicato nella \cref{sec:SerialProtocol}.
+
+\paragraph{}
+Nello specifico:
+\begin{itemize}
+	\item All'accensione il sistema entra nello stato \texttt{AUTOMATIC}, aspettando un \textbf{valore di apertura} sulla linea \textbf{seriale}.
+	\item Controlla se viene \textbf{premuto il pulsante} per il \textbf{cambio modalità} o se viene ricevuto il corrispondente \textbf{comando seriale}, permettendo di passare tra \texttt{AUTOMATIC} e \texttt{MANUAL}.
+	\item Quando in \texttt{MANUAL} \textbf{imposta la valvola} sul valore scelto tramite \textbf{potenziometro} o comunicato tramite \textbf{seriale}: in entrambi i casi viene comunicato al CUS il livello di apertura corrente.
+	\item Entra nello stato \texttt{UNCONNECTED} se richiesto dal CUS, ritornando allo stato precedente al ripristino della connesione
+\end{itemize}
+Dato che il sistema è dotato di una sua logica, anche in \textbf{assenza di connessione seriale} al server CUS, un operatore fisico può impostare la modalità manuale e regolare l'apertura della valvola tramite potenziometro.
+
+\includepdf[
+    pages=1,
+    scale=0.8,
+    landscape,
+    addtotoc={1, subsubsection, 2, {Diagramma degli stati delle FSM}, null},
+    pagecommand={
+        \phantomsection
+        \refstepcounter{figure}
+        \label{fig:WcsStateDiagram}
+    }
+]{WCS/docs/State_Diagram.pdf}
+
+\includepdf[
+    pages=1,
+    scale=0.85,
+    landscape,
+    addtotoc={1, subsubsection, 2, {Diagramma delle classi}, null},
+    pagecommand={
+        \phantomsection
+        \refstepcounter{figure}
+        \label{fig:WcsClassDiagram}
+    }
+]{WCS/docs/Class_Diagram.pdf}
+
+
+\section{DBS - Dashboard Subsystem}
+
+\paragraph{}
+La dashboard è stata realizzata tramite una \textbf{pagina HTML}, utilizzando il framework \textbf{bootstrap} per lo stile, la libreria \textbf{Chart.js} per la visualizzazione dello storico delle letture e il linguaggio \textbf{JavaScript (API Fetch)} per la comunicazione in HTTP con il CUS (protocollo descritto nella \cref{sec:ApiHttp}).
+
+All'apertura è richiesto l'indirizzo del server su cui sono messe a disposizione le API HTTP; è comunque possibile cambiarlo in qualsiasi momento tramite l'apposito pulsante.
+
+Tutti i dati visualizzati vengono aggiornati a intervalli regolari tramite nuove richieste HTTP al CUS.
+
+\paragraph{}
+La dashboard è comoposta da due sezioni:
+\begin{itemize}
+	\item \textbf{Distanza dall'acqua}: Riporta il grafico con le ultime letture del TMS
+	\item \textbf{Pannello di controllo}:
+	\begin{itemize}
+		\item Stato attuale del sistema (modalità e livello di apertura della valvola)
+		\item Comando per passare tra modalità \texttt{AUTOMATIC} e \texttt{MANUAL}
+		\item Se in \texttt{MANUAL}, slider per impostare manualmente l'apertura della valvola
+	\end{itemize}
+\end{itemize}
+
+\paragraph{}
+\begin{figure}[H]
+	\centering{}
+	\includegraphics[width=1\textwidth]{docs/DBS_Screenshot}
+	\caption{Screenshot della DashBoard mentre il sistema era in stato \texttt{MANUAL} con la valvola impostata al 22\%}
+\end{figure}
+
+\chapter{Comunicazione tra Sottosistemi}
+
+\section{Protocollo Seriale}
+\label{sec:SerialProtocol}
+
+Per agevolare la comunicazione è stato stabilito un protocollo basato su stringhe separate da un carattere di \texttt{Line Feed}.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Comando} & \textbf{Direzione} & \textbf{Descrizione}\\ \midrule
+0 & CUS $\leftrightarrow$ WCS & Passaggio di stato \texttt{AUTOMATIC}  $\longleftrightarrow$ \texttt{MANUAL} (e viceversa) \\
+1 & CUS $\rightarrow$ WCS & Passaggio a stato \texttt{UNCONNECTED} \\
+2 & CUS $\rightarrow$ WCS & Connessione ripristinata, ritorno allo stato precedente \\
+3 + valore & CUS $\leftrightarrow$ WCS & Nuovo valore di apertura della valvola\\ \bottomrule
+\end{tabular}
+\caption{Protocollo di comunicazione seriale tra CUS e WCS}
+\label{table:CommunicationProtocol}
+\end{table}
+
+Alcuni comandi sono bidirezionali, visto che:
+\begin{itemize}
+	\item Il passaggio di stato \texttt{AUTOMATIC}  $\longleftrightarrow$ \texttt{MANUAL} può essere richiesto sia tramite DBS (quindi CUS $\rightarrow$ WCS), ma anche tramite pulsante fisico nel WCS rendendo necessario l'aggiornamento del CUS (WCS $\rightarrow$ CUS).
+	\item Per impostare un valore manuale da remoto, è utilizzato il comando \texttt{3} (CUS $\rightarrow$ WCS). In ogni caso, sia per valore impostato tramite potenziometro sia tramite DBS, quando in modalità manuale il WCS aggiorna il CUS sul valore di apertura corrente (WCS $\rightarrow$ CUS).
+\end{itemize}
+
+\section{API HTTP}
+\label{sec:ApiHttp}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{llp{11cm}}
+\toprule
+\textbf{Route} & \textbf{Metodo} & \textbf{Descrizione}\\ \midrule
+\texttt{api/data} & \texttt{GET} & Restituisce un JSON con le ultime letture del TMS \\
+\texttt{api/status} & \texttt{GET} &  Restituisce un JSON con lo stato del sistema (modalità e apertura valvola) \\
+\texttt{api/toggle} & \texttt{POST} & Richiede il passaggio di modalità \texttt{AUTOMATIC}  $\longleftrightarrow$ \texttt{MANUAL} \\
+\texttt{api/opening} & \texttt{POST} & Imposta il nuovo valore di apertura contenuto nel campo \texttt{value} del JSON passato nel body della richiesta \\ \bottomrule
+\end{tabular}
+\caption{API HTTP messe a disposizione dal CUS}
+\label{table:HttpApi}
+\end{table}
+Nella \cref{table:HttpApi} si riporta una breve descrizione delle API HTTP messe a disposizione dal CUS grazie alla classe \texttt{HttpServer}.
+
+\chapter{Test}
+
+\appendix
+
+\chapter{Configurazioni Utilizzate}
+
+Tutti i parametri di configurazione possono essere impostati nei file \texttt{include/config.h} di ogni sottosistema. Si riportano in seguito tutti quelli utilizzati ai fini del test.
+
+\section{Cablaggio}
+\label{app:Cablaggio}
+
+\subsection{TMS - ESP32}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Componente} & \textbf{Pin} & \textbf{Tipo} \\ \midrule
+Led Verde & 26 & Digital Output\\
+Led Rosso & 25 & Digital Output\\
+Sonar Trigger & 33 & Digital Output\\
+Sonar Echo & 32 & Digital Input\\ \bottomrule
+\end{tabular}
+\caption{Elenco completo dei pin utilizzati nell'ESP32}
+\label{table:TmsPin}
+\end{table}
+
+\subsection{WCS - Arduino Uno}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Componente} & \textbf{Pin} & \textbf{Tipo} \\ \midrule
+Pulsante cambio modalità & 2 & Digital Input\\
+Potenziometro controllo manuale & A0 & Analog Input\\
+Servomotore valvola & 3 & Digital Output (PWM)\\
+LCD I2C SDA/SCL & A4/A5 & I2C\\ \bottomrule
+\end{tabular}
+\caption{Elenco completo dei pin di Arduino utilizzati}
+\label{table:WcsPin}
+\end{table}
+
+\section{Periodo delle Task}
+
+\subsection{TMS - ESP32}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Task} & \textbf{Period (ms)}\\ \midrule
+Logger Task & 3000\\
+Connection Task & 500\\
+Status Task & 1000\\ \bottomrule
+\end{tabular}
+\caption{Periodo di esecuzione di ogni Task}
+\label{table:TmsTaskScheduling}
+\end{table}
+
+\subsection{WCS - Arduino Uno}
+\begin{table}[H]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Task} & \textbf{Period (ms)}\\ \midrule
+Main Task & 250\\ \bottomrule
+\end{tabular}
+\caption{Periodo di esecuzione di ogni Task}
+\label{table:WcsTaskScheduling}
+\end{table}
+
+\section{Parametri Operativi}
+\label{app:Parametri}
+
+\subsection{Distanze}
+Quando il sistema è in modalità \texttt{AUTOMATIC}, il livello di apertura della valvola viene stabilito sulla base dei seguenti valori, impostati nella classe \texttt{ControllerImpl} del CUS:
+\begin{table}[H]
+\centering
+\begin{tabular}{llll}
+\toprule
+\textbf{Descrizione} & \textbf{Nome parametri} & \textbf{Distanza dalla cima} & \textbf{Apertura valvola} \\ \midrule
+Cisterna Vuota & $> L1$ & $> 50$ cm & 0\% \\
+Cisterna Semipiena & $ > L2 $ \& $ \le L1 $ & $ > 30 $ cm \& $ \le 50 $ cm & 50\% \\
+Cisterna Piena & $\le L2$  & $\le 30$ cm & 100\% \\ \bottomrule
+\end{tabular}
+\caption{Parametri per l'identificazione dello stato della cisterna}
+\label{table:Distanze}
+\end{table}
+
+\subsection{Tempi}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{p{6cm}lll}
+\toprule
+\textbf{Descrizione} & \textbf{Classe} & \textbf{Nome parametro} & \textbf{Tempo} \\ \midrule
+Isteresti per transizione \texttt{Cisterna Vuota} $\rightarrow$ \texttt{Cisterna Semipiena} & \texttt{TmsImpl} & T1 - HYSTERESIS & 5s \\
+Passaggio ad \texttt{UNCONNECTED} & \texttt{ControllerImpl} & T2 - TIMEOUT  & 7s \\ \bottomrule
+\end{tabular}
+\caption{Tempi presenti nel CUS per effettuare i cambi di stato}
+\label{table:Tempi}
+\end{table}
+
+\end{document}
