@@ -33,7 +33,7 @@ public class WcsImpl implements Wcs {
     @Override
     public void sendSetValve(final int i) {
         if (i >= 0 && i <= 100) {
-            this.serialCom.sendMsg("3-" + i + "\n");
+            this.serialCom.sendMsg("3" + i + "\n");
             this.valveLevel = i;
         }
     }
@@ -57,7 +57,7 @@ public class WcsImpl implements Wcs {
 
                     // The WCS updates the valve opening
                     case '3':
-                        String val = buf.substring(2);
+                        String val = buf.substring(1);
                         this.valveLevel = Integer.parseInt(val);
                         break;
                 }

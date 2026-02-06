@@ -20,7 +20,7 @@ void SerialCommunication::loop() {
 
             case SET_VALUE_CMD:
                 this->arrivedValue = true;
-                msg.remove(0, 2);
+                msg.remove(0, 1);
                 this->value = msg.toInt();
                 return;
         }
@@ -61,7 +61,7 @@ void SerialCommunication::sendToggleMode() {
 
 void SerialCommunication::sendOpeningChanged(int val) {
     char buf[6];
-    sprintf(buf, "%c-%d", SET_VALUE_CMD, val);
+    sprintf(buf, "%c%d", SET_VALUE_CMD, val);
     Serial.println(buf);
 }
 
