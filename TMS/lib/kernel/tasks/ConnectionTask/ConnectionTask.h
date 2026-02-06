@@ -20,7 +20,7 @@ class ConnectionTask : public Task {
 
     private:
         SharedData *sharedData;
-        enum states {CONNECTED, WIFI_CONNECTING, WIFI_DISCONNECTED, MQTT_CONNECTING, NONE};
+        enum states {CONNECTED, WIFI_CONNECTING, DISCONNECTED, MQTT_CONNECTING, NONE};
         states currState;
         states precState;
         uint32_t lastWifiConnectionAttempt, lastMqttConnectionAttempt;

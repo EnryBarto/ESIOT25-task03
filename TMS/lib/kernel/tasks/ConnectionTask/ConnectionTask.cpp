@@ -1,7 +1,7 @@
 #include "ConnectionTask.h"
 
 ConnectionTask::ConnectionTask() {
-    this->currState = WIFI_DISCONNECTED;
+    this->currState = DISCONNECTED;
 }
 
 void ConnectionTask::init(SharedData *sharedData) {
@@ -18,7 +18,7 @@ void ConnectionTask::tick() {
 
         case CONNECTED:
             if (WiFi.status() != WL_CONNECTED) {
-                this->currState = WIFI_DISCONNECTED;
+                this->currState = DISCONNECTED;
             } else if (!this->sharedData->getMqttClient()->connected()) {
                 this->currState = MQTT_CONNECTING;
             } else {
@@ -28,7 +28,7 @@ void ConnectionTask::tick() {
 
         case MQTT_CONNECTING:
             if (WiFi.status() != WL_CONNECTED) {
-                this->currState = WIFI_DISCONNECTED;
+                this->currState = DISCONNECTED;
             } else if (this->sharedData->getMqttClient()->connected()) {
                 this->currState = CONNECTED;
             } else if (millis() - this->lastMqttConnectionAttempt >= TIMEOUT_MQTT_RECONNECTION) {
@@ -40,11 +40,11 @@ void ConnectionTask::tick() {
             if (WiFi.status() == WL_CONNECTED) {
                 this->currState = MQTT_CONNECTING;
             } else if (millis() - this->lastWifiConnectionAttempt >= TIMEOUT_WIFI_RECONNECTION) {
-                this->currState = WIFI_DISCONNECTED;
+                this->currState = DISCONNECTED;
             }
             break;
 
-        case WIFI_DISCONNECTED:
+        case DISCONNECTED:
             this->currState = WIFI_CONNECTING;
             break;
     }
@@ -77,12 +77,13 @@ void ConnectionTask::stateTransition() {
             this->sharedData->setMqttError(true);
             break;
 
-        case WIFI_DISCONNECTED:
+        case DISCONNECTED:
             #ifdef DEBUG
             Serial.println("CONNECTION TASK: WiFi disconnected");
             #endif
             WiFi.disconnect();
             this->sharedData->setWifiError(true);
+            this->sharedData->setMqttError(true);
             break;
 
         case CONNECTED:
