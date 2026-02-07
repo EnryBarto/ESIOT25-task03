@@ -12,7 +12,7 @@
 
 // Hardware configs
 #define POTENTIOMETER_TOLLERANCE 15
-#define BUTTON_NUM_TICK_DEBOUNCE 4
+#define BUTTON_NUM_TICK_DEBOUNCE 5
 #define MAX_SERVO_OPENING 90
 
 // Lcd parameters
@@ -23,7 +23,7 @@
 
 // Task configs
 #define BASE_PERIOD 50
-#define MAIN_TASK_PERIOD 250
+#define MAIN_TASK_PERIOD 100
 
 
 #endif
