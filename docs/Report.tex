@@ -21,7 +21,7 @@
 \usepackage{booktabs}
 
 \geometry{
-    top=1.5in, 
+    top=1.5in,
     bottom=1in,
     left=1in,
     right=1in,
@@ -95,11 +95,11 @@
         {\LARGE Relazione per il corso di Sistemi Embedded e IoT }
     \end{center}
 
-    \vspace{15mm}
+    \vspace{20mm}
     \begin{center}
         \includegraphics[width=0.8\textwidth]{assignment-03-sketch}
     \end{center}
-    \vspace{25mm}
+    \vspace{30mm}
 
     Bartocetti Enrico, matr. 0001115097
 \end{titlepage}
@@ -195,9 +195,9 @@ Per l'elenco esaustivo dei pin utilizzati vedi \cref{table:TmsPin}.
 \subsection{Software}
 
 \paragraph{}
-Lato software l'architettura del TMS è basata su delle \textbf{task}, eseguite dal sistema operativo dell'ESP32. 
+Lato software l'architettura del TMS è basata su delle \textbf{task}, eseguite dal sistema operativo dell'ESP32.
 
-Ogni task è basata su una \textbf{macchina a stati finiti} (FSM) (vedi schema in \cref{fig:TmsStateDiagram} a Pag. \pageref{fig:TmsStateDiagram}), da eseguire ogni certo periodo di tempo (vedi \cref{table:TmsTaskScheduling}). La comunicazione tra task avviene grazie a una struttura dati condivisa (la classe \texttt{SharedData}).
+Ogni task è basata su una \textbf{macchina a stati finiti} (FSM) (vedi schema in \cref{fig:TmsStateDiagram} a Pag. \pageref{fig:TmsStateDiagram}), da eseguire ogni certo periodo di tempo (vedi \cref{table:TmsTaskScheduling}) rendendole quindi \textbf{sincrone}. La comunicazione tra task avviene grazie a una struttura dati condivisa (la classe \texttt{SharedData}).
 
 L'esecuzione periodica delle task avviene nella seguente maniera:
 \begin{enumerate}
@@ -212,7 +212,7 @@ L'esecuzione periodica delle task avviene nella seguente maniera:
 Le classi sono descritte nel diagramma delle classi \cref{fig:TmsClassDiagram}, Pag. \pageref{fig:TmsClassDiagram}.
 
 \paragraph{}
-La comunicazione dei dati rilevati al CUS avviene tramite protocollo \textbf{MQTT}, pubblicando la lettura nel topic \texttt{water\_level}.
+La comunicazione dei dati rilevati al CUS avviene tramite protocollo \textbf{MQTT}, pubblicando la lettura nel topic \texttt{water\_level} (spiegazione dettagliata nella \cref{sec:Mqtt}).
 
 \paragraph{}
 Breve descrizione delle task:
@@ -263,7 +263,7 @@ Nello specifico:
 		\item Restituisce lo stato del sistema e il livello di apertura della valvola
 		\item Cambia la modalità tra \texttt{AUTOMATIC} e \texttt{MANUAL}
 		\item Se in manuale, imposta l'apertura della valvola sulla base del parametro comunicato
-	\end{itemize} 
+	\end{itemize}
 	\item Quando in modalità automatica, \textbf{comunica} al WCS tramite seriale il \textbf{livello di apertura della valvola} sulla base delle letture inviate dal TMS.
 	\item Quando in modalità manuale, riceve tramite seriale il livello di apertura corrente della valvola (sia che sia stato impostato tramite potenziometro, sia che sia stato impostato tramite seriale).
 \end{itemize}
@@ -318,9 +318,11 @@ Per l'elenco esaustivo dei pin utilizzati vedi \cref{table:WcsPin}.
 \subsection{Software}
 
 \paragraph{}
-Come per il TMS, l'architettura del WCS è basata su delle \textbf{task}: l'Arduino non è però dotato di un sistema operativo, rendendo quindi necessaria l'implementazione di uno \textbf{scheduler}, basato in questo caso sul Timer2 del microcontrollore.
+Come per il TMS, l'architettura del WCS è basata su delle \textbf{task}: l'Arduino non è però dotato di un sistema operativo, rendendo quindi necessaria l'implementazione di uno \textbf{scheduler} cooperativo, basato in questo caso sul Timer2 del microcontrollore.
 
-Data la semplicità di questo sottosistema, è stata sviluppata una sola task basata su una \textbf{macchina a stati finiti} (FSM), di cui si riporta lo schema in \cref{fig:WcsStateDiagram} a Pag. \pageref{fig:WcsStateDiagram}.
+Data la semplicità di questo sottosistema, è stata sviluppata una sola task basata su una \textbf{macchina a stati finiti sincrona} (FSM), di cui si riporta lo schema in \cref{fig:WcsStateDiagram} a Pag. \pageref{fig:WcsStateDiagram}.
+
+In questo caso è importante che il \textbf{periodo della task} legato alla lettura del pulsante di cambio modalità non sia superiore al \textbf{MEST} per non perdere la pressione dello stesso.
 
 Lo scheduler ogni 50ms controlla se è passato abbastanza tempo per eseguire una task, e in caso affermativo la esegue. Durante questi 50ms l'arduino viene posto in \textbf{sleep mode} di tipo IDLE, e viene risvegliato tramite il Timer2. La scelta della sleep mode è ricaduta sulla IDLE così che non vengano persi eventuali comandi ricevuti sulla seriale.
 
@@ -438,11 +440,30 @@ Alcuni comandi sono bidirezionali, visto che:
 \end{table}
 Nella \cref{table:HttpApi} si riporta una breve descrizione delle API HTTP messe a disposizione dal CUS grazie alla classe \texttt{HttpServer}.
 
+\section{MQTT}
+\label{sec:Mqtt}
+
+\paragraph{}
+Per comunicare la distanza del livello dell'acqua dalla cima della cisterna, il \textbf{TMS pubblica} la lettura del sonar a \textbf{intervalli regolari} tramite MQTT nel \textbf{topic \texttt{water\_level}}, utilizzando il broker messo a disposizione dal CUS (che \textbf{non richiede autenticazione}). Poiché è presente un solo dato da comunicare non è stato utilizzato un particolare formato di comunicazione (ad esempio JSON), ma viene inviato solo il valore letto. Nel caso di errori (ad esempio mancata lettura del sonar), il TMS pubblica il valore -1 che viene scartato dal CUS, entrando quindi in stato \texttt{UNCONNECTED} se gli errori di lettura persistono.
+
+Per l'utilizzo del protocollo MQTT è stata utilizzata la libreria \href{https://github.com/knolleary/pubsubclient}{\texttt{PubSubClient}}. Questa libreria ha la limitazione di eseguire il \textbf{publish} solo con \textbf{QoS 0} (At Most Once): nel nostro caso non è comunque un problema grave, poiché se un messaggio dovesse andare perso basterebbe attendere il prossimo visto che vengono pubblicati con una certa frequenza.
+
 \chapter{Test}
+Sono stati realizzati una serie di test: di ognuno si riporta il link al video (in cui si visualizzano DBS, TMS e WCS) e una breve descrizione. Tutte le configurazioni utilizzate sono quelle descritte nell'\cref{chap:Config}.
+
+\begin{itemize}
+	\item \textbf{Accensione} del sistema: Inizialmente il DBS mostra \texttt{NOT\_AVAILABLE} e il TMS ha il LED rosso acceso. Quando il CUS viene messo in esecuzione, tutti i sistemi si aggiornano, partendo in modalità \texttt{AUTOMATIC}: il TMS accende il LED verde, il WCS si riavvia con il valore corretto di apertura e il DBS mostra lo stato corrente del sistema. \href{https://liveunibo-my.sharepoint.com/:v:/g/personal/enrico_bartocetti_studio_unibo_it/IQAsZnIv4J2JSoQF0lA0R8HVATj4pE9dVtz6AUaT9wTUZ4M?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=hxe27M}{Link}
+	\item \textbf{Modalità automatica}: Il sistema in modalità \texttt{AUTOMATIC} imposta l'apertura della valvola basandosi sul livello di riempimento della cisterna. Quando rimangono meno di 50cm per più di 5 secondi la valvola viene aperta al 50\%, quando rimangono meno di 30cm la valvola viene immediatamente aperta al 100\%. Alla diminuzione del livello dell'acqua invece, non appena si sale sopra i 30cm la valvola viene ridotta prima al 50\% e poi chiusa completamente sopra i 50cm. \href{https://liveunibo-my.sharepoint.com/:v:/g/personal/enrico_bartocetti_studio_unibo_it/IQBuXnR9tUnrQqSlUGf5JuLFAQa9ptnqnSguED-beged36I?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJTdHJlYW1XZWJBcHAiLCJyZWZlcnJhbFZpZXciOiJTaGFyZURpYWxvZy1MaW5rIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXcifX0%3D&e=HxxLWE}{Link}
+	\item \textbf{Modalità manuale}: Il sistema quando entra in modalità \texttt{MANUAL} imposta la valvola sul valore letto dal potenziometro. Il livello di apertura della valvola può essere impostato sia tramite potenziometro nel WCS sia tramite slider del DBS. È possibile passare dalla modalità automatica alla manuale utilizzando il bottone nel DBS oppure il pulsante fisico nel WCS. Mentre il sistema è in modalità manuale il TMS continua a registrare valori, e non appena si torna in modalità \texttt{AUTOMATIC} la valvola viene impostata sul valore corretto basato sulla lettura del TMS. \href{https://liveunibo-my.sharepoint.com/:v:/g/personal/enrico_bartocetti_studio_unibo_it/IQDzOg-c6aHOToVhTKMoPKTNAXIna3SqujeVlrF9vGcsIn4?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=NryXGy}{Link}
+	\item \textbf{Errore di rete}: Quando il TMS non invia dati per più di 7 secondi per un qualasi motivo (in questo caso mancata alimentazione), il sistema passa in modalità \texttt{UNCONNECTED}. Non appena la connessione viene ripristinata e il TMS comunica una nuova lettura al CUS, viene ripristinato lo stato in cui ci si trovava prima dell'errore. \href{https://liveunibo-my.sharepoint.com/:v:/g/personal/enrico_bartocetti_studio_unibo_it/IQBn3b7hFssYT6h9Sv3IDvERASubILY3hp-wZ4YG8JNJ6Ss?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=g9aUBb}{Link}
+
+\end{itemize}
+
 
 \appendix
 
 \chapter{Configurazioni Utilizzate}
+\label{chap:Config}
 
 Tutti i parametri di configurazione possono essere impostati nei file \texttt{include/config.h} di ogni sottosistema. Si riportano in seguito tutti quelli utilizzati ai fini del test.
 
@@ -489,7 +510,7 @@ LCD I2C SDA/SCL & A4/A5 & I2C\\ \bottomrule
 \centering
 \begin{tabular}{lll}
 \toprule
-\textbf{Task} & \textbf{Period (ms)}\\ \midrule
+\textbf{Task} & \textbf{Periodo [ms]}\\ \midrule
 Logger Task & 3000\\
 Connection Task & 500\\
 Status Task & 1000\\ \bottomrule
@@ -503,8 +524,8 @@ Status Task & 1000\\ \bottomrule
 \centering
 \begin{tabular}{lll}
 \toprule
-\textbf{Task} & \textbf{Period (ms)}\\ \midrule
-Main Task & 250\\ \bottomrule
+\textbf{Task} & \textbf{Periodo [ms]}\\ \midrule
+Main Task & 100\\ \bottomrule
 \end{tabular}
 \caption{Periodo di esecuzione di ogni Task}
 \label{table:WcsTaskScheduling}
